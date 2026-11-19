@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════════════
    SCRIPT 05 · Carga de las tablas de hechos
    Parte A · FACT_Atenciones          (T6, T7, T8, T9)
-   Parte B · FACT_InteraccionCampana  (T16–T19) → se agrega en la Fase 5
+   Parte B · FACT_InteraccionCampana  (T16, T18, T17, T19)
    Requisitos: dimensiones cargadas (03 y 04).
    ════════════════════════════════════════════════════════════════════ */
 USE CLINICABI_DW_Grupo1;
@@ -128,4 +128,156 @@ DROP TABLE #Lineas, #PagosAtencion, #MedioPrincipal, #Prorrateo;
 SELECT COUNT(*) AS FilasFACT_Atenciones, COUNT(DISTINCT AtencionID) AS Atenciones,
        SUM(ValorNeto) AS ValorNeto, SUM(ValorPaciente) AS ValorPaciente, SUM(ValorAseguradora) AS ValorAseguradora
 FROM dbo.FACT_Atenciones;
+GO
+
+/* ═══════════════ PARTE B · FACT_InteraccionCampana ═══════════════
+   Grano: un documento ÚNICO de interacciones_campanas (paciente × campaña × canal).
+   Orden: T16 (duplicados y limpieza) → T18 (fechas) → T17 (pivote) → T19 (cumplimiento). */
+
+/* Paso 1 · T16 (a): eliminar duplicados exactos. El Doc se guardó sin _id, así
+   que dos documentos idénticos tienen el mismo Doc: se comparan por su hash
+   SHA-256 y se conserva el de menor MongoId. */
+IF OBJECT_ID('tempdb..#Unicos') IS NOT NULL DROP TABLE #Unicos;
+
+SELECT MongoId, Doc
+INTO #Unicos
+FROM (SELECT MongoId, Doc,
+             ROW_NUMBER() OVER (PARTITION BY HASHBYTES('SHA2_256', Doc) ORDER BY MongoId) AS rn
+      FROM stg.mongo_interacciones_campanas) x
+WHERE rn = 1;
+
+SELECT 'T16' AS Regla, (SELECT COUNT(*) FROM stg.mongo_interacciones_campanas) AS DocsStg,
+       (SELECT COUNT(*) FROM stg.mongo_interacciones_campanas) - COUNT(*) AS DuplicadosEliminados,
+       COUNT(*) AS DocsUnicos
+FROM #Unicos;
+
+/* Paso 2 · T16 (b): canal → email / sms / whatsapp / app; campanaId → TRIM + MAYÚSCULAS. */
+IF OBJECT_ID('tempdb..#Inter') IS NOT NULL DROP TABLE #Inter;
+
+SELECT u.MongoId, j.pacienteId AS PacienteIdOrigen,
+       j.campanaId AS CampanaIdOrigen, UPPER(TRIM(j.campanaId)) AS CampanaID,
+       j.canal AS CanalOrigen,
+       CASE LOWER(TRIM(j.canal))
+            WHEN 'email' THEN 'email' WHEN 'e-mail' THEN 'email' WHEN 'correo' THEN 'email'
+            WHEN 'sms' THEN 'sms'
+            WHEN 'whatsapp' THEN 'whatsapp' WHEN 'wa' THEN 'whatsapp'
+            WHEN 'app' THEN 'app' WHEN 'push' THEN 'app'
+       END AS Canal,
+       ISNULL(j.dispositivo, N'Sin dato') AS Dispositivo,
+       CASE WHEN j.citaAgendada = 'true' THEN 1 ELSE 0 END AS CitaAgendada
+INTO #Inter
+FROM #Unicos u
+CROSS APPLY OPENJSON(u.Doc) WITH (
+    pacienteId   INT          '$.pacienteId',
+    campanaId    VARCHAR(30)  '$.campanaId',
+    canal        VARCHAR(20)  '$.canal',
+    dispositivo  NVARCHAR(15) '$.dispositivo',
+    citaAgendada VARCHAR(5)   '$.citaAgendada') j;
+
+SELECT 'T16' AS Regla,
+       SUM(CASE WHEN CanalOrigen COLLATE Latin1_General_BIN <> Canal THEN 1 ELSE 0 END) AS CanalEstandarizado,
+       SUM(CASE WHEN Canal IS NULL THEN 1 ELSE 0 END) AS CanalSinEquivalencia_debe_ser_0,
+       SUM(CASE WHEN CampanaIdOrigen COLLATE Latin1_General_BIN <> CampanaID
+                  OR DATALENGTH(CampanaIdOrigen) <> DATALENGTH(CampanaID) THEN 1 ELSE 0 END) AS CampanaIdLimpiado
+FROM #Inter;
+
+/* Paso 3 · T18: desanidar eventos y unificar la fecha a DATETIME2 en UTC.
+   Viene como {"$date":"AAAA-MM-DDThh:mm:ssZ"} (estilo 127) o como texto
+   "dd/mm/aaaa hh:mm" en UTC (estilo 103). Luego se pasa a Colombia (UTC-5). */
+IF OBJECT_ID('tempdb..#Eventos') IS NOT NULL DROP TABLE #Eventos;
+
+SELECT u.MongoId, e.tipo,
+       CASE WHEN e.fechaObj IS NOT NULL THEN 0 ELSE 1 END AS EraTexto,
+       DATEADD(HOUR, -5, COALESCE(CONVERT(DATETIME2(0), e.fechaObj, 127),
+                                  TRY_CONVERT(DATETIME2(0), e.fechaTxt, 103))) AS FechaCol   -- UTC → UTC-5
+INTO #Eventos
+FROM #Unicos u
+CROSS APPLY OPENJSON(u.Doc, '$.eventos') WITH (
+    tipo     VARCHAR(20) '$.tipo',
+    fechaObj VARCHAR(30) '$.fecha."$date"',     -- fecha como objeto
+    fechaTxt VARCHAR(30) '$.fecha') e;          -- fecha como texto (NULL si es objeto)
+
+SELECT 'T18' AS Regla, COUNT(*) AS Eventos, SUM(EraTexto) AS FechasTextoConvertidas,
+       SUM(CASE WHEN FechaCol IS NULL THEN 1 ELSE 0 END) AS FechasSinConvertir_debe_ser_0
+FROM #Eventos;
+
+/* Paso 4 · T17: pivote del arreglo eventos → banderas 0/1 (un doc = una fila).
+   Abierto = "abierto" o "leido" (WhatsApp/SMS reportan leído).
+   HorasHastaApertura = horas entre el primer "entregado" y la primera apertura.
+   FechaPrimerEvento da el TiempoKey (T18); FechaClic es insumo de T21. */
+IF OBJECT_ID('tempdb..#Pivote') IS NOT NULL DROP TABLE #Pivote;
+
+SELECT MongoId,
+       MAX(CASE WHEN tipo = 'enviado'            THEN 1 ELSE 0 END) AS Enviado,
+       MAX(CASE WHEN tipo = 'entregado'          THEN 1 ELSE 0 END) AS Entregado,
+       MAX(CASE WHEN tipo = 'rebotado'           THEN 1 ELSE 0 END) AS Rebotado,
+       MAX(CASE WHEN tipo IN ('abierto','leido') THEN 1 ELSE 0 END) AS Abierto,
+       MAX(CASE WHEN tipo = 'impresion'          THEN 1 ELSE 0 END) AS Impresion,
+       MAX(CASE WHEN tipo = 'clic'               THEN 1 ELSE 0 END) AS Clic,
+       MAX(CASE WHEN tipo = 'baja_suscripcion'   THEN 1 ELSE 0 END) AS BajaSuscripcion,
+       MIN(FechaCol) AS FechaPrimerEvento,
+       MIN(CASE WHEN tipo = 'clic' THEN FechaCol END) AS FechaClic,
+       MIN(CASE WHEN tipo = 'entregado' THEN FechaCol END) AS FechaEntregado,
+       MIN(CASE WHEN tipo IN ('abierto','leido') THEN FechaCol END) AS FechaApertura
+INTO #Pivote
+FROM #Eventos
+GROUP BY MongoId;
+
+/* Paso 5 · T19 + inserción.
+   - PacienteKey: pacienteId que no existe en el OLTP → -1 (se reporta abajo).
+   - EnviadoSinConsentimiento = 1 si el canal requiere autorización y el perfil
+     vigente (T12) no la tiene. App no la requiere. Paciente sin perfil → 1
+     (no hay autorización registrada).
+   - FueraDeSegmento = 1 si la campaña tiene segmentoObjetivo y el paciente no
+     cumple la edad AL INICIO DE LA CAMPAÑA o el sexo. Sexo "Sin dato" → 1
+     (no se puede verificar que cumpla). Paciente inexistente → 0: no hay
+     edad ni sexo que evaluar y ya queda reportado como PacienteKey -1. */
+INSERT INTO dbo.FACT_InteraccionCampana (TiempoKey, PacienteKey, CampanaKey, CanalKey, MongoId, PacienteIdOrigen,
+       Dispositivo, FechaPrimerEvento, FechaClic, Enviado, Entregado, Rebotado, Abierto, Impresion, Clic,
+       BajaSuscripcion, CitaAgendada, EnviadoSinConsentimiento, FueraDeSegmento, HorasHastaApertura)
+SELECT ISNULL(t.TiempoKey, -1),
+       ISNULL(dp.PacienteKey, -1),                                                       -- T19
+       ISNULL(dc.CampanaKey, -1),
+       ISNULL(ca.CanalKey, -1),
+       i.MongoId, i.PacienteIdOrigen, i.Dispositivo, p.FechaPrimerEvento, p.FechaClic,
+       p.Enviado, p.Entregado, p.Rebotado, p.Abierto, p.Impresion, p.Clic, p.BajaSuscripcion, i.CitaAgendada,
+       CASE WHEN ca.RequiereConsentimiento = 1
+             AND ISNULL(CASE i.Canal WHEN 'email'    THEN pv.AceptaEmail
+                                     WHEN 'sms'      THEN pv.AceptaSMS
+                                     WHEN 'whatsapp' THEN pv.AceptaWhatsApp END, 0) = 0
+            THEN 1 ELSE 0 END,                                                           -- T19 consentimiento
+       CASE WHEN dp.PacienteKey IS NULL THEN 0       -- paciente inexistente: ya se reporta como -1, no se evalúa
+            WHEN dc.SexoObjetivo IN (N'F', N'M') AND LEFT(dp.Sexo, 1) <> dc.SexoObjetivo THEN 1   -- "Sin dato" ≠ F/M → 1
+            WHEN dc.EdadMin IS NOT NULL AND ed.EdadInicio NOT BETWEEN dc.EdadMin AND dc.EdadMax THEN 1
+            ELSE 0 END,                                                                  -- T19 segmento
+       CAST(DATEDIFF(MINUTE, p.FechaEntregado, p.FechaApertura) / 60.0 AS DECIMAL(10,2))   -- T17
+FROM #Inter i
+JOIN #Pivote p ON p.MongoId = i.MongoId
+LEFT JOIN dbo.DIM_Tiempo        t  ON t.TiempoKey    = CONVERT(INT, CONVERT(CHAR(8), p.FechaPrimerEvento, 112))  -- T18
+LEFT JOIN dbo.DIM_Paciente      dp ON dp.PacienteID  = i.PacienteIdOrigen AND dp.PacienteKey <> -1
+LEFT JOIN dbo.DIM_Campana       dc ON dc.CampanaID   = i.CampanaID
+LEFT JOIN dbo.DIM_CanalContacto ca ON ca.CodigoCanal = i.Canal
+LEFT JOIN stg.perfil_vigente    pv ON pv.PacienteID  = i.PacienteIdOrigen
+OUTER APPLY (SELECT DATEDIFF(YEAR, dp.FechaNacimiento, dc.FechaInicio)
+                    - CASE WHEN DATEADD(YEAR, DATEDIFF(YEAR, dp.FechaNacimiento, dc.FechaInicio), dp.FechaNacimiento)
+                                > CAST(dc.FechaInicio AS DATE) THEN 1 ELSE 0 END AS EdadInicio) ed;  -- edad al inicio de la campaña
+
+DROP TABLE #Unicos, #Inter, #Eventos, #Pivote;
+
+SELECT 'FACT_InteraccionCampana' AS Tabla, COUNT(*) AS Filas,
+       SUM(CASE WHEN PacienteKey = -1 THEN 1 ELSE 0 END) AS PacienteInexistente_T19,
+       COUNT(DISTINCT CASE WHEN PacienteKey = -1 THEN PacienteIdOrigen END) AS PacienteIdsInexistentes,
+       SUM(CASE WHEN CampanaKey = -1 THEN 1 ELSE 0 END) AS SinCampana,
+       SUM(CASE WHEN CanalKey = -1 THEN 1 ELSE 0 END) AS SinCanal,
+       SUM(CASE WHEN TiempoKey = -1 THEN 1 ELSE 0 END) AS SinFecha,
+       SUM(EnviadoSinConsentimiento) AS EnviadoSinConsentimiento,
+       SUM(FueraDeSegmento) AS FueraDeSegmento
+FROM dbo.FACT_InteraccionCampana;
+
+SELECT c.CodigoCanal, COUNT(*) AS Docs, SUM(f.Enviado) AS Enviado, SUM(f.Entregado) AS Entregado,
+       SUM(f.Rebotado) AS Rebotado, SUM(f.Abierto) AS Abierto, SUM(f.Impresion) AS Impresion, SUM(f.Clic) AS Clic,
+       SUM(f.CitaAgendada) AS CitaAgendada, SUM(f.EnviadoSinConsentimiento) AS SinConsentimiento,
+       CAST(AVG(f.HorasHastaApertura) AS DECIMAL(10,2)) AS HorasPromApertura
+FROM dbo.FACT_InteraccionCampana f JOIN dbo.DIM_CanalContacto c ON c.CanalKey = f.CanalKey
+GROUP BY c.CodigoCanal;
 GO
