@@ -1,0 +1,50 @@
+ID | Problema | Afectados | Regla ETL
+Q01 | perfiles: pacienteId guardado como texto | 60 | T11 → entero
+Q02 | perfiles: pacientes con más de un perfil (pacientes / documentos) | [{"pacientes":175,"docs":350}] | T12 → perfil con fechaActualizacion más reciente
+Q03 | perfiles: lineasInteres con valores no oficiales (docs) | 1119 | T13 → tabla de equivalencias
+Q03b | perfiles: variantes distintas de lineasInteres no oficiales | 30 | T13
+Q04 | perfiles: sin programaRiesgo | 2668 | T14 → 'Sin programa' / 'No aplica'
+Q05 | perfiles: nivelRiesgo con mayúsculas/minúsculas inconsistentes | 94 | T14 → Alto/Medio/Bajo
+Q06 | perfiles: adherencia como texto '85%' o decimal 0.85 | 147 | T14 → entero 0-100
+Q07 | perfiles: consentimientos como texto 'SI'/'NO' | 81 | T14 → 1/0
+Q08 | perfiles: sin encuestasSatisfaccion | 2211 | T15 → NPS NULL, TipoNPS 'Sin encuesta'
+Q09 | perfiles: encuestas con puntaje como texto (respuestas) | [{"n":130}] | T15 → entero
+Q10 | interacciones: duplicados exactos (copias sobrantes) | [{"sobrantes":240}] | T16 → eliminar
+Q11 | interacciones: canal fuera de email/sms/whatsapp/app | 826 | T16 → estandarizar
+Q11b | interacciones: variantes de canal | ["APP","App","E-mail","EMAIL","Email","SMS","Sms","WA","WhatsApp","Whatsapp","app","correo","email","push","sms","sms ","whatsapp"] | T16
+Q12 | interacciones: campanaId con espacios o minúsculas | 65 | T16 → TRIM + UPPER
+Q13 | interacciones: documentos con fechas de evento en texto dd/mm/aaaa hh:mm | 927 | T18 → convertir (UTC)
+Q14 | interacciones: pacienteId que no existe en el OLTP (> 6000) | 211 | T19 → PacienteKey -1
+Q15 | interacciones: citaAgendada ausente (solo existe si hubo clic) | 32276 | T17 → CitaAgendada 0
+Q16 | interacciones: canal app sin evento 'enviado' (solo impresión) | 5970 | T17 → Enviado 0, Impresion 1
+Q17 | interacciones: abierto y leido son dos tipos para la misma métrica | 12061 | T17 → Abierto = abierto o leido
+Q18 | campanas: presupuesto como texto ('9.200.000', '$22.500.000') | [{"_id":"CMP-2025-05","presupuesto":"15.100.000"},{"_id":"CMP-2025-11","presupuesto":"$22.500.000"},{"_id":"CMP-2024-09","presupuesto":"9.200.000"}] | T20 → número
+Q19 | campanas: responsable faltante o vacío | 2 | T20 → 'Sin asignar'
+Q20 | campanas: lineasPromocionadas no estandarizadas | 1 | T20 + T13
+Q21 | campanas: sin segmentoObjetivo (campaña abierta) / sin sexo en el segmento | [12,6] | T20 → SexoObjetivo 'Todos', EdadMin/Max NULL
+Q22 | campanas: sin codigoBeneficio | 4 | T20 → 'Sin código'
+
+CUMPLIMIENTO 1 · envíos por canal no autorizado
+{"_id":{"estado":"Autorizado","canal":"email"},"envios":11842}
+{"_id":{"estado":"Autorizado","canal":"sms"},"envios":6179}
+{"_id":{"estado":"Autorizado","canal":"whatsapp"},"envios":11217}
+{"_id":{"estado":"NO autorizado","canal":"email"},"envios":361}
+{"_id":{"estado":"NO autorizado","canal":"sms"},"envios":191}
+{"_id":{"estado":"NO autorizado","canal":"whatsapp"},"envios":344}
+{"_id":{"estado":"Sin perfil","canal":"email"},"envios":70}
+{"_id":{"estado":"Sin perfil","canal":"sms"},"envios":54}
+{"_id":{"estado":"Sin perfil","canal":"whatsapp"},"envios":85}
+
+CUMPLIMIENTO 2 · campañas con segmentoObjetivo (se cruzan con el OLTP en SQL)
+CMP-2024-03 Mes de la mujer 2024 {"sexo":"F","edadMin":21,"edadMax":69}
+CMP-2025-07 Vacaciones con buena visión 2025 {"edadMin":18,"edadMax":80}
+CMP-2025-08 Control de crónicos al día 2025 {"edadMin":30,"edadMax":90}
+CMP-2025-06 Salud masculina 2025 {"sexo":"M","edadMin":40,"edadMax":75}
+CMP-2025-10 Octubre rosa 2025 {"sexo":"F","edadMin":40,"edadMax":74}
+CMP-2024-06 Salud masculina 2024 {"sexo":"M","edadMin":40,"edadMax":75}
+CMP-2024-07 Vacaciones con buena visión 2024 {"edadMin":18,"edadMax":80}
+CMP-2024-10 Octubre rosa 2024 {"sexo":"F","edadMin":40,"edadMax":74}
+CMP-2024-08 Control de crónicos al día 2024 {"edadMin":30,"edadMax":90}
+CMP-2025-09 Corazón sano 2025 {"edadMin":35,"edadMax":85}
+CMP-2024-09 Corazón sano 2024 {"edadMin":35,"edadMax":85}
+CMP-2025-03 Mes de la mujer 2025 {"sexo":"F","edadMin":21,"edadMax":69}

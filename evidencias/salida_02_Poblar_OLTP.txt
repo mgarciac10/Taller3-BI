@@ -1,0 +1,62 @@
+Tabla | Registros
+Paises | 1
+Regiones | 4
+Departamentos | 20
+Ciudades | 24
+TiposAfiliacion | 5
+Aseguradoras | 9
+Pacientes | 6000
+LineasServicio | 6
+TiposServicio | 22
+Especialidades | 19
+Servicios | 99
+Diagnosticos | 33
+ModalidadesAtencion | 4
+Sedes | 15
+Cargos | 7
+Profesionales | 347
+MediosPago | 6
+EstadosAtencion | 3
+Atenciones | 57543
+DetalleAtencion | 93740
+Pagos | 87970
+
+AtencionesSinProfesionalNoEsperadas
+0
+
+Anio | Mes | Atenciones | FacturacionNeta
+2024 | 1 | 1696 | 266231555.00000000
+2024 | 2 | 1872 | 288278425.00000000
+2024 | 3 | 2114 | 349502240.00000000
+2024 | 4 | 2254 | 355178410.00000000
+2024 | 5 | 2351 | 356097085.00000000
+2024 | 6 | 1886 | 304698195.00000000
+2024 | 7 | 1823 | 307864000.00000000
+2024 | 8 | 2039 | 321782605.00000000
+2024 | 9 | 1975 | 338281975.00000000
+2024 | 10 | 2275 | 362967745.00000000
+2024 | 11 | 2013 | 321805710.00000000
+2024 | 12 | 1388 | 228518395.00000000
+2025 | 1 | 1975 | 326673320.00000000
+2025 | 2 | 1976 | 327455605.00000000
+2025 | 3 | 2307 | 371360740.00000000
+2025 | 4 | 2497 | 398219275.00000000
+2025 | 5 | 2684 | 440428700.00000000
+2025 | 6 | 2084 | 336984870.00000000
+2025 | 7 | 2155 | 369456330.00000000
+2025 | 8 | 2270 | 358513060.00000000
+2025 | 9 | 2235 | 343537265.00000000
+2025 | 10 | 2570 | 390913905.00000000
+2025 | 11 | 2450 | 381779805.00000000
+2025 | 12 | 1703 | 269524485.00000000
+
+Modalidad | Anio | Atenciones
+Domiciliaria | 2024 | 1822
+Domiciliaria | 2025 | 2394
+Extramural | 2024 | 1170
+Extramural | 2025 | 1335
+Presencial | 2024 | 17107
+Presencial | 2025 | 16959
+Telemedicina | 2024 | 3587
+Telemedicina | 2025 | 6218
+

@@ -1,0 +1,3 @@
+campanas: 24
+interacciones_campanas: 36313
+perfiles_pacientes: 5215
