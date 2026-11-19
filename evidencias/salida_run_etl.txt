@@ -1,0 +1,566 @@
+﻿ETL iniciado 2026-11-19 15:04:13 en localhost\SQLEXPRESS
+
+==================== 01 Crear DW (base vacía, miembros -1) ====================
+Changed database context to 'master'.
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+(1 row affected)
+Tabla|Filas
+-----|-----
+DIM_Aseguradora|1
+DIM_Campana|1
+DIM_CanalContacto|1
+DIM_Diagnostico|1
+DIM_Modalidad|1
+DIM_Paciente|1
+DIM_Profesional|1
+DIM_Sede|1
+DIM_Servicio|1
+DIM_Tiempo|1
+FACT_Atenciones|0
+FACT_InteraccionCampana|0
+
+(12 rows affected)
+
+==================== 02 Staging + extracción OLTP ====================
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(1 row affected)
+(4 rows affected)
+(20 rows affected)
+(24 rows affected)
+(5 rows affected)
+(9 rows affected)
+(6,000 rows affected)
+(6 rows affected)
+(22 rows affected)
+(19 rows affected)
+(99 rows affected)
+(33 rows affected)
+(4 rows affected)
+(15 rows affected)
+(7 rows affected)
+(347 rows affected)
+(6 rows affected)
+(3 rows affected)
+(57,543 rows affected)
+(93,740 rows affected)
+(87,970 rows affected)
+(4 rows affected)
+Fuente|Objeto|FilasOrigen|FilasStg
+------|------|-----------|--------
+OLTP|Pacientes|6000|6000
+OLTP|Atenciones|57543|57543
+OLTP|DetalleAtencion|93740|93740
+OLTP|Pagos|87970|87970
+
+(4 rows affected)
+
+==================== Extracción MongoDB → stg (Python) ====================
+campanas                  origen=    24  stg=    24  OK
+perfiles_pacientes        origen=  5215  stg=  5215  OK
+interacciones_campanas    origen= 36313  stg= 36313  OK
+
+==================== 03 Dimensiones OLTP (T1–T5, T10) ====================
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(731 rows affected)
+(6,000 rows affected)
+(99 rows affected)
+(15 rows affected)
+(347 rows affected)
+(9 rows affected)
+(33 rows affected)
+(4 rows affected)
+(4 rows affected)
+Dimension|Filas
+---------|-----
+DIM_Tiempo|732
+DIM_Paciente|6001
+DIM_Servicio|100
+DIM_Sede|16
+DIM_Profesional|348
+DIM_Aseguradora|10
+DIM_Diagnostico|34
+DIM_Modalidad|5
+DIM_CanalContacto|5
+
+(9 rows affected)
+
+==================== 04 Transformaciones Mongo (T11–T15, T20) ====================
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(16 rows affected)
+(5,215 rows affected)
+Regla|PerfilesLeidos|PacienteIdComoTexto_Convertidos
+-----|--------------|-------------------------------
+T11|5215|60
+
+(1 row affected)
+(5,040 rows affected)
+Regla|Perfiles|PacientesUnicos|PerfilesDescartadosPorAntiguos
+-----|--------|---------------|------------------------------
+T12|5215|5040|175
+
+(1 row affected)
+(8,675 rows affected)
+Regla|ValoresLineaEnPerfilesVigentes|ValoresEstandarizados|SinEquivalencia_debe_ser_0
+-----|------------------------------|---------------------|--------------------------
+T13|8675|1071|0
+
+(1 row affected)
+(2,906 rows affected)
+(5,040 rows affected)
+Regla|PerfilesConsentimientoTexto|SinPrograma|NivelRiesgoNormalizado|AdherenciaPorcentajeTexto|AdherenciaFraccion
+-----|---------------------------|-----------|----------------------|-------------------------|------------------
+T14|76|2575|88|73|69
+
+(1 row affected)
+Regla|PacientesConEncuesta|Encuestas|PuntajesTextoConvertidos
+-----|--------------------|---------|------------------------
+T15|2906|4736|126
+
+(1 row affected)
+TipoNPS|Pacientes
+-------|---------
+Promotor|892
+Detractor|825
+Sin encuesta|2134
+Pasivo|1189
+
+(4 rows affected)
+(5,040 rows affected)
+Tabla|PacientesConPerfil|PacientesSinPerfil|PerfilesDePacienteInexistente
+-----|------------------|------------------|-----------------------------
+DIM_Paciente|5040|960|0
+
+(1 row affected)
+(54 rows affected)
+(24 rows affected)
+Regla|Campanas|PresupuestoTextoConvertido|ResponsableSinAsignar|SinCodigoBeneficio|ConSegmento
+-----|--------|--------------------------|---------------------|------------------|-----------
+T20|24|3|2|4|12
+
+(1 row affected)
+CampanaID|NombreCampana|FechaInicio|Canales|LineasPromocionadas|SexoObjetivo|EdadMin|EdadMax|Presupuesto|Responsable
+---------|-------------|-----------|-------|-------------------|------------|-------|-------|-----------|-----------
+CMP-2024-01|Chequeo de inicio de año 2024|2024-01-08 08:00:00|Email|Consulta externa, Laboratorio clínico|Todos|NULL|NULL|7200000.00|Julián Restrepo
+CMP-2024-02|Sonrisa sana en familia 2024|2024-02-03 08:00:00|Email, SMS|Odontología|Todos|NULL|NULL|6700000.00|Paula Henao
+CMP-2024-03|Mes de la mujer 2024|2024-03-01 08:00:00|WhatsApp, App|Imágenes diagnósticas, Promoción y prevención|F|21|69|8900000.00|Andrés Gaviria
+CMP-2024-04|Jornada de vacunación de las Américas 2024|2024-04-20 08:00:00|SMS, WhatsApp|Promoción y prevención|Todos|NULL|NULL|8800000.00|Marcela Ochoa
+CMP-2024-05|Temporada respiratoria 2024|2024-05-02 08:00:00|Email, WhatsApp, App|Consulta externa, Promoción y prevención|Todos|NULL|NULL|11400000.00|Julián Restrepo
+CMP-2024-06|Salud masculina 2024|2024-06-03 08:00:00|Email|Consulta externa, Laboratorio clínico|M|40|75|6000000.00|Paula Henao
+CMP-2024-07|Vacaciones con buena visión 2024|2024-07-01 08:00:00|App, SMS|Cirugía ambulatoria, Consulta externa|Todos|18|80|9800000.00|Andrés Gaviria
+CMP-2024-08|Control de crónicos al día 2024|2024-08-04 08:00:00|WhatsApp|Consulta externa, Laboratorio clínico|Todos|30|90|6500000.00|Marcela Ochoa
+CMP-2024-09|Corazón sano 2024|2024-09-01 08:00:00|WhatsApp, SMS|Consulta externa, Imágenes diagnósticas, Laboratorio clínico|Todos|35|85|9200000.00|Julián Restrepo
+CMP-2024-10|Octubre rosa 2024|2024-10-01 08:00:00|Email, WhatsApp, App|Imágenes diagnósticas, Promoción y prevención|F|40|74|14700000.00|Paula Henao
+CMP-2024-11|Semana de la salud 2024|2024-11-10 08:00:00|Email, SMS, WhatsApp, App|Cirugía ambulatoria, Consulta externa, Imágenes diagnósticas, Laboratorio clínico, Odontología, Promoción y prevención|Todos|NULL|NULL|18000000.00|Andrés Gaviria
+CMP-2024-12|Viaja sano en vacaciones 2024|2024-12-01 08:00:00|Email, WhatsApp|Consulta externa, Promoción y prevención|Todos|NULL|NULL|7100000.00|Sin asignar
+CMP-2025-01|Chequeo de inicio de año 2025|2025-01-08 08:00:00|Email|Consulta externa, Laboratorio clínico|Todos|NULL|NULL|9200000.00|Paula Henao
+CMP-2025-02|Sonrisa sana en familia 2025|2025-02-03 08:00:00|Email, SMS|Odontología|Todos|NULL|NULL|6800000.00|Andrés Gaviria
+CMP-2025-03|Mes de la mujer 2025|2025-03-01 08:00:00|WhatsApp, App|Imágenes diagnósticas, Promoción y prevención|F|21|69|9700000.00|Marcela Ochoa
+CMP-2025-04|Jornada de vacunación de las Américas 2025|2025-04-20 08:00:00|SMS, WhatsApp|Promoción y prevención|Todos|NULL|NULL|8800000.00|Julián Restrepo
+CMP-2025-05|Temporada respiratoria 2025|2025-05-02 08:00:00|Email, WhatsApp, App|Consulta externa, Promoción y prevención|Todos|NULL|NULL|15100000.00|Paula Henao
+CMP-2025-06|Salud masculina 2025|2025-06-03 08:00:00|Email|Consulta externa, Laboratorio clínico|M|40|75|7100000.00|Andrés Gaviria
+CMP-2025-07|Vacaciones con buena visión 2025|2025-07-01 08:00:00|App, SMS|Cirugía ambulatoria, Consulta externa|Todos|18|80|11700000.00|Sin asignar
+CMP-2025-08|Control de crónicos al día 2025|2025-08-04 08:00:00|WhatsApp|Consulta externa, Laboratorio clínico|Todos|30|90|6200000.00|Julián Restrepo
+CMP-2025-09|Corazón sano 2025|2025-09-01 08:00:00|WhatsApp, SMS|Consulta externa, Imágenes diagnósticas, Laboratorio clínico|Todos|35|85|11100000.00|Paula Henao
+CMP-2025-10|Octubre rosa 2025|2025-10-01 08:00:00|Email, WhatsApp, App|Imágenes diagnósticas, Promoción y prevención|F|40|74|17400000.00|Andrés Gaviria
+CMP-2025-11|Semana de la salud 2025|2025-11-10 08:00:00|Email, SMS, WhatsApp, App|Cirugía ambulatoria, Consulta externa, Imágenes diagnósticas, Laboratorio clínico, Odontología, Promoción y prevención|Todos|NULL|NULL|22500000.00|Marcela Ochoa
+CMP-2025-12|Viaja sano en vacaciones 2025|2025-12-01 08:00:00|Email, WhatsApp|Consulta externa, Promoción y prevención|Todos|NULL|NULL|8600000.00|Julián Restrepo
+N/A|Sin campaña|NULL|||Todos|NULL|NULL|NULL|Sin asignar
+
+(25 rows affected)
+
+==================== 05 Hechos (T6–T9, T16–T19) ====================
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(82,448 rows affected)
+(50,592 rows affected)
+(50,592 rows affected)
+(82,448 rows affected)
+(82,448 rows affected)
+FilasFACT_Atenciones|Atenciones|ValorNeto|ValorPaciente|ValorAseguradora
+--------------------|----------|---------|-------------|----------------
+82448|50592|8116053700.00|1492064300.00|6623989400.00
+
+(1 row affected)
+(36,073 rows affected)
+Regla|DocsStg|DuplicadosEliminados|DocsUnicos
+-----|-------|--------------------|----------
+T16|36313|240|36073
+
+(1 row affected)
+(36,073 rows affected)
+Regla|CanalEstandarizado|CanalSinEquivalencia_debe_ser_0|CampanaIdLimpiado
+-----|------------------|-------------------------------|-----------------
+T16|782|0|64
+
+(1 row affected)
+(82,445 rows affected)
+Regla|Eventos|FechasTextoConvertidas|FechasSinConvertir_debe_ser_0
+-----|-------|----------------------|-----------------------------
+T18|82445|930|0
+
+(1 row affected)
+Warning: Null value is eliminated by an aggregate or other SET operation.
+(36,073 rows affected)
+(36,073 rows affected)
+Tabla|Filas|PacienteInexistente_T19|PacienteIdsInexistentes|SinCampana|SinCanal|SinFecha|EnviadoSinConsentimiento|FueraDeSegmento
+-----|-----|-----------------------|-----------------------|----------|--------|--------|------------------------|---------------
+FACT_InteraccionCampana|36073|210|171|0|0|0|1096|216
+
+Warning: Null value is eliminated by an aggregate or other SET operation.
+(1 row affected)
+CodigoCanal|Docs|Enviado|Entregado|Rebotado|Abierto|Impresion|Clic|CitaAgendada|SinConsentimiento|HorasPromApertura
+-----------|----|-------|---------|--------|-------|---------|----|------------|-----------------|-----------------
+whatsapp|11564|11564|11334|230|8193|0|1984|971|426|18.13
+email|12204|12204|11621|583|3791|0|1011|390|426|35.76
+app|5934|0|0|0|0|5934|453|140|0|NULL
+sms|6371|6371|6181|190|0|0|562|161|244|NULL
+
+Warning: Null value is eliminated by an aggregate or other SET operation.
+(4 rows affected)
+
+==================== 06 Atribución T21 ====================
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(401 rows affected)
+(397 rows affected)
+(0 rows affected)
+(665 rows affected)
+Regla|AtencionesCandidatas|AtencionesConEmpateDeCampanas|AtencionesAtribuidas|LineasAtribuidas|ValorNetoAtribuido
+-----|--------------------|-----------------------------|--------------------|----------------|------------------
+T21|397|0|397|665|62174625.00
+
+(1 row affected)
+Verificacion|Incumplen_debe_ser_0
+------------|--------------------
+1) sin clic del paciente en la campaña|0
+2) atención fuera de los 15 días tras el clic|0
+3) ningún servicio de línea promocionada|0
+
+(3 rows affected)
+CampanaID|NombreCampana|Atenciones|ValorNeto
+---------|-------------|----------|---------
+CMP-2024-01|Chequeo de inicio de año 2024|6|325900.00
+CMP-2024-02|Sonrisa sana en familia 2024|2|465500.00
+CMP-2024-03|Mes de la mujer 2024|4|629100.00
+CMP-2024-04|Jornada de vacunación de las Américas 2024|3|715480.00
+CMP-2024-05|Temporada respiratoria 2024|26|5974100.00
+CMP-2024-06|Salud masculina 2024|4|157900.00
+CMP-2024-07|Vacaciones con buena visión 2024|6|1744800.00
+CMP-2024-08|Control de crónicos al día 2024|9|991700.00
+CMP-2024-09|Corazón sano 2024|15|1545900.00
+CMP-2024-10|Octubre rosa 2024|12|1704150.00
+CMP-2024-11|Semana de la salud 2024|58|8383925.00
+CMP-2024-12|Viaja sano en vacaciones 2024|14|1856600.00
+CMP-2025-01|Chequeo de inicio de año 2025|6|360430.00
+CMP-2025-03|Mes de la mujer 2025|15|2372700.00
+CMP-2025-04|Jornada de vacunación de las Américas 2025|10|1418000.00
+CMP-2025-05|Temporada respiratoria 2025|40|4167785.00
+CMP-2025-06|Salud masculina 2025|6|1073300.00
+CMP-2025-07|Vacaciones con buena visión 2025|5|632400.00
+CMP-2025-08|Control de crónicos al día 2025|11|709925.00
+CMP-2025-09|Corazón sano 2025|21|2707300.00
+CMP-2025-10|Octubre rosa 2025|9|978700.00
+CMP-2025-11|Semana de la salud 2025|103|21910930.00
+CMP-2025-12|Viaja sano en vacaciones 2025|12|1348100.00
+
+(23 rows affected)
+AtencionID|CampanaID|FechaClic|FechaAtencion|DiasDesdeClic
+----------|---------|---------|-------------|-------------
+1109|CMP-2024-01|2024-01-13 22:22:21|2024-01-17 20:04:00|3.916666
+1694|CMP-2024-01|2024-01-23 01:09:03|2024-01-27 16:12:00|4.625000
+1938|CMP-2024-01|2024-01-23 22:22:15|2024-01-31 20:18:00|7.916666
+
+(3 rows affected)
+
+==================== 07 Validación ====================
+Changed database context to 'CLINICABI_DW_Grupo1'.
+(8 rows affected)
+Paso|FilasOrigen|Descartados|FilasDestino|Cuadra|Explicacion
+----|-----------|-----------|------------|------|-----------
+OLTP Pacientes → DIM_Paciente|6000|0|6000|OK|Todos los pacientes se cargan (sin descartes)
+OLTP Atenciones → atenciones en FACT_Atenciones|57543|6951|50592|OK|T6: canceladas e inasistencias no se cargan (se reportan por modalidad en la sección 4)
+OLTP DetalleAtencion → filas FACT_Atenciones|93740|11292|82448|OK|T6: líneas de detalle de atenciones canceladas o con inasistencia
+MongoDB interacciones_campanas → stg|36313|0|36313|OK|Extracción completa (Python)
+stg interacciones → FACT_InteraccionCampana|36313|240|36073|OK|T16: duplicados exactos eliminados (se conserva una copia de cada uno)
+MongoDB perfiles_pacientes → stg|5215|0|5215|OK|Extracción completa (Python)
+stg perfiles → DIM_Paciente (TienePerfil = 1)|5215|175|5040|OK|T12: perfiles antiguos de pacientes con más de un perfil (se queda el más reciente)
+MongoDB campanas → stg → DIM_Campana|24|0|24|OK|Todas las campañas se cargan
+
+(8 rows affected)
+NetoOLTP|NetoDW|PagosOLTP|Cuadre_OLTP_DW_Pagos|PagosPaciente|ValorPacienteDW|PagosAseguradora|ValorAseguradoraDW|Cuadre_Paciente_Aseguradora
+--------|------|---------|--------------------|-------------|---------------|----------------|------------------|---------------------------
+8116053700.00|8116053700.00|8116053700.00|OK|1492064300.00|1492064300.00|6623989400.00|6623989400.00|OK
+
+(1 row affected)
+LineasPacMasAsegDistintoNeto|AtencionesNetoDistintoPagos|AtencionesProrrateoPacienteDescuadrado
+----------------------------|---------------------------|--------------------------------------
+0|0|0
+
+(1 row affected)
+Hecho|Dimension|FilasConMenos1|Explicacion
+-----|---------|--------------|-----------
+FACT_Atenciones|DIM_Tiempo|0|Toda atención tiene fecha dentro del calendario
+FACT_Atenciones|DIM_Paciente|0|Todo paciente de una atención existe en el OLTP (FK)
+FACT_Atenciones|DIM_Servicio|0|Todo servicio existe en el catálogo (FK)
+FACT_Atenciones|DIM_Sede|0|Toda atención tiene sede
+FACT_Atenciones|DIM_Profesional|11655|T8: líneas de atenciones con orden externa (sin profesional tratante)
+FACT_Atenciones|DIM_Aseguradora|0|T9: toda atención tiene pagador histórico
+FACT_Atenciones|DIM_Diagnostico|11655|T8: líneas de atenciones con orden externa (sin diagnóstico)
+FACT_Atenciones|DIM_Modalidad|0|Toda atención tiene modalidad
+FACT_Atenciones|DIM_Campana|81783|T21: líneas de atenciones NO atribuidas a ninguna campaña
+FACT_InteraccionCampana|DIM_Tiempo|0|T18: todas las fechas de evento se pudieron convertir
+FACT_InteraccionCampana|DIM_Paciente|210|T19: pacienteId que no existe en el OLTP (se conserva en PacienteIdOrigen)
+FACT_InteraccionCampana|DIM_Campana|0|T16: todo campanaId limpio existe en campanas
+FACT_InteraccionCampana|DIM_CanalContacto|0|T16: todas las variantes de canal tienen equivalencia
+
+(13 rows affected)
+LineasOrdenExterna|LineasProfYDiagMenos1|Menos1SinOrdenExterna_debe_ser_0
+------------------|---------------------|--------------------------------
+11655|11655|0
+
+(1 row affected)
+Modalidad|Atenciones|Realizadas|Canceladas|Inasistencias|TasaCancelacionPct|TasaInasistenciaPct
+---------|----------|----------|----------|-------------|------------------|-------------------
+Domiciliaria|4805|4216|296|293|6.16|6.10
+Extramural|2897|2505|180|212|6.21|7.32
+Presencial|38686|34066|2368|2252|6.12|5.82
+Telemedicina|11155|9805|669|681|6.00|6.10
+NULL|57543|50592|3513|3438|6.10|5.97
+
+(5 rows affected)
+Regla|AtencionesPagadorDistintoAlActual|DeEllasRealizadas
+-----|---------------------------------|-----------------
+T9|988|852
+
+(1 row affected)
+(29 rows affected)
+ID|Fuente|Problema|RegistrosAfectados|Regla|Tratamiento
+--|------|--------|------------------|-----|-----------
+M01|Mongo · perfiles|pacienteId guardado como texto|60|T11|Convertido a entero
+M02|Mongo · perfiles|Perfiles sobrantes de pacientes con más de un perfil|175|T12|Se conserva el de fechaActualizacion más reciente
+M03|Mongo · perfiles|Perfiles con lineasInteres no oficiales (mayúsculas, tildes, sinónimos)|1119|T13|Tabla de equivalencias stg.EquivalenciaLinea
+M04|Mongo · perfiles|Sin programaRiesgo|2668|T14|"Sin programa" y nivel "No aplica"
+M05|Mongo · perfiles|nivelRiesgo con mayúsculas inconsistentes|94|T14|Normalizado a Alto / Medio / Bajo
+M06|Mongo · perfiles|Adherencia como texto "85%" o fracción 0.85|147|T14|Convertida a entero 0–100
+M07|Mongo · perfiles|Consentimientos como texto "SI" / "NO"|81|T14|SI → 1, NO → 0
+M08|Mongo · perfiles|Sin encuestasSatisfaccion|2211|T15|NPS NULL y TipoNPS "Sin encuesta"
+M09|Mongo · perfiles|Puntajes de encuesta como texto|130|T15|Convertidos a entero antes del promedio
+M10|Mongo · interacciones|Documentos duplicados exactos (copias sobrantes)|240|T16|Eliminados; se conserva una copia
+M11|Mongo · interacciones|canal fuera de email / sms / whatsapp / app|826|T16|Estandarizado (E-mail, correo, WA, push…)
+M12|Mongo · interacciones|campanaId con espacios o minúsculas|65|T16|TRIM + MAYÚSCULAS
+M13|Mongo · interacciones|Documentos con fechas de evento en texto dd/mm/aaaa hh:mm|927|T18|Convertidas (UTC) y pasadas a hora Colombia
+M14|Mongo · interacciones|pacienteId que no existe en el OLTP|211|T19|PacienteKey = -1 (se reporta en cumplimiento)
+M15|Mongo · interacciones|citaAgendada ausente (solo existe cuando hubo clic)|32276|T17|CitaAgendada = 0
+M16|Mongo · interacciones|Canal app sin evento "enviado" (solo impresión)|5970|T17|Enviado = 0; el embudo de app empieza en Impresion
+M17|Mongo · interacciones|Apertura registrada como "abierto" o como "leido"|12061|T17|Abierto = abierto o leído
+M18|Mongo · campanas|presupuesto como texto ("9.200.000", "$22.500.000")|3|T20|Convertido a número
+M19|Mongo · campanas|responsable faltante o vacío|2|T20|"Sin asignar"
+M20|Mongo · campanas|lineasPromocionadas no estandarizadas|1|T20+T13|Tabla de equivalencias
+M21|Mongo · campanas|Sin segmentoObjetivo (campaña abierta a todos)|12|T20|SexoObjetivo "Todos", EdadMin/EdadMax NULL
+M22|Mongo · campanas|segmentoObjetivo sin sexo (solo edad)|6|T20|SexoObjetivo "Todos"
+M23|Mongo · campanas|Sin codigoBeneficio|4|T20|"Sin código"
+S01|OLTP · Pacientes|Nombres o apellidos con espacios sobrantes (inicio, fin o dobles)|253|T1|TRIM + espacios dobles a uno + CONCAT_WS
+S02|OLTP · Pacientes|Sexo NULL|74|T2|Se carga como "Sin dato"
+S03|OLTP · Pacientes|Email o teléfono vacío (no se usan en el modelo)|1086|-|No se cargan al DW (datos de contacto fuera del alcance analítico)
+S04|OLTP · Atenciones|Atenciones canceladas o con inasistencia|6951|T6|No se cargan al FACT; se reportan por modalidad
+S05|OLTP · Atenciones|Atenciones realizadas con orden externa (sin profesional ni diagnóstico)|6240|T8|ProfesionalKey y DiagnosticoKey = -1
+S06|OLTP · Atenciones|Pagador de la atención distinto a la aseguradora actual del paciente|988|T9|AseguradoraKey sale de Atenciones.AseguradoraID
+
+(29 rows affected)
+(165 rows affected)
+Hallazgo|Motivo|Registros|PctInteracciones
+--------|------|---------|----------------
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|133|0.37
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|79|0.22
+Envío fuera del segmento objetivo|Sexo sin dato (no verificable)|4|0.01
+Envío fuera del segmento objetivo|NULL|216|0.60
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|888|2.46
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|208|0.58
+Envío sin consentimiento (Ley 1581 de 2012)|NULL|1096|3.04
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|210|0.58
+Paciente inexistente en el OLTP|NULL|210|0.58
+
+(9 rows affected)
+PacienteIdsInexistentes
+-----------------------
+171
+
+(1 row affected)
+Hallazgo|Motivo|CampanaID|NombreCampana|Canal|Registros
+--------|------|---------|-------------|-----|---------
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-03|Mes de la mujer 2024|App|2
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2024-03|Mes de la mujer 2024|App|8
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-03|Mes de la mujer 2024|WhatsApp|4
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2024-03|Mes de la mujer 2024|WhatsApp|5
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2024-06|Salud masculina 2024|Email|9
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-06|Salud masculina 2024|Email|2
+Envío fuera del segmento objetivo|Sexo sin dato (no verificable)|CMP-2024-06|Salud masculina 2024|Email|1
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-07|Vacaciones con buena visión 2024|App|8
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-07|Vacaciones con buena visión 2024|SMS|9
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-08|Control de crónicos al día 2024|WhatsApp|10
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-09|Corazón sano 2024|SMS|9
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-09|Corazón sano 2024|WhatsApp|11
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-10|Octubre rosa 2024|App|2
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2024-10|Octubre rosa 2024|App|6
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-10|Octubre rosa 2024|Email|5
+Envío fuera del segmento objetivo|Sexo sin dato (no verificable)|CMP-2024-10|Octubre rosa 2024|Email|1
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2024-10|Octubre rosa 2024|Email|5
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2024-10|Octubre rosa 2024|WhatsApp|5
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2024-10|Octubre rosa 2024|WhatsApp|5
+Envío fuera del segmento objetivo|Sexo sin dato (no verificable)|CMP-2024-10|Octubre rosa 2024|WhatsApp|1
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-03|Mes de la mujer 2025|App|2
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2025-03|Mes de la mujer 2025|App|6
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-03|Mes de la mujer 2025|WhatsApp|1
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2025-03|Mes de la mujer 2025|WhatsApp|10
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-06|Salud masculina 2025|Email|6
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2025-06|Salud masculina 2025|Email|6
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-07|Vacaciones con buena visión 2025|App|11
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-07|Vacaciones con buena visión 2025|SMS|9
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-08|Control de crónicos al día 2025|WhatsApp|9
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-09|Corazón sano 2025|SMS|9
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-09|Corazón sano 2025|WhatsApp|9
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2025-10|Octubre rosa 2025|App|5
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-10|Octubre rosa 2025|App|3
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-10|Octubre rosa 2025|Email|3
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2025-10|Octubre rosa 2025|Email|9
+Envío fuera del segmento objetivo|Sexo sin dato (no verificable)|CMP-2025-10|Octubre rosa 2025|WhatsApp|1
+Envío fuera del segmento objetivo|Sexo distinto al objetivo|CMP-2025-10|Octubre rosa 2025|WhatsApp|5
+Envío fuera del segmento objetivo|Edad al inicio de la campaña fuera del rango|CMP-2025-10|Octubre rosa 2025|WhatsApp|4
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-01|Chequeo de inicio de año 2024|Email|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-01|Chequeo de inicio de año 2024|Email|20
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-02|Sonrisa sana en familia 2024|Email|3
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-02|Sonrisa sana en familia 2024|Email|26
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-02|Sonrisa sana en familia 2024|SMS|15
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-02|Sonrisa sana en familia 2024|SMS|4
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-03|Mes de la mujer 2024|WhatsApp|1
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-03|Mes de la mujer 2024|WhatsApp|18
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-04|Jornada de vacunación de las Américas 2024|SMS|15
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-04|Jornada de vacunación de las Américas 2024|SMS|4
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-04|Jornada de vacunación de las Américas 2024|WhatsApp|3
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-04|Jornada de vacunación de las Américas 2024|WhatsApp|21
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-05|Temporada respiratoria 2024|Email|6
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-05|Temporada respiratoria 2024|Email|23
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-05|Temporada respiratoria 2024|WhatsApp|6
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-05|Temporada respiratoria 2024|WhatsApp|22
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-06|Salud masculina 2024|Email|6
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-06|Salud masculina 2024|Email|22
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-07|Vacaciones con buena visión 2024|SMS|5
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-07|Vacaciones con buena visión 2024|SMS|15
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-08|Control de crónicos al día 2024|WhatsApp|17
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-08|Control de crónicos al día 2024|WhatsApp|7
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-09|Corazón sano 2024|SMS|17
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-09|Corazón sano 2024|SMS|1
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-09|Corazón sano 2024|WhatsApp|7
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-09|Corazón sano 2024|WhatsApp|17
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-10|Octubre rosa 2024|Email|7
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-10|Octubre rosa 2024|Email|18
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-10|Octubre rosa 2024|WhatsApp|19
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-10|Octubre rosa 2024|WhatsApp|7
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-11|Semana de la salud 2024|Email|34
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-11|Semana de la salud 2024|Email|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-11|Semana de la salud 2024|SMS|26
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-11|Semana de la salud 2024|SMS|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-11|Semana de la salud 2024|WhatsApp|34
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-11|Semana de la salud 2024|WhatsApp|9
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-12|Viaja sano en vacaciones 2024|Email|6
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-12|Viaja sano en vacaciones 2024|Email|21
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2024-12|Viaja sano en vacaciones 2024|WhatsApp|5
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2024-12|Viaja sano en vacaciones 2024|WhatsApp|19
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-01|Chequeo de inicio de año 2025|Email|6
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-01|Chequeo de inicio de año 2025|Email|28
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-02|Sonrisa sana en familia 2025|Email|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-02|Sonrisa sana en familia 2025|Email|26
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-02|Sonrisa sana en familia 2025|SMS|18
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-02|Sonrisa sana en familia 2025|SMS|5
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-03|Mes de la mujer 2025|WhatsApp|1
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-03|Mes de la mujer 2025|WhatsApp|20
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-04|Jornada de vacunación de las Américas 2025|SMS|11
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-04|Jornada de vacunación de las Américas 2025|SMS|18
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-04|Jornada de vacunación de las Américas 2025|WhatsApp|22
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-04|Jornada de vacunación de las Américas 2025|WhatsApp|7
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-05|Temporada respiratoria 2025|Email|1
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-05|Temporada respiratoria 2025|Email|29
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-05|Temporada respiratoria 2025|WhatsApp|22
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-05|Temporada respiratoria 2025|WhatsApp|5
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-06|Salud masculina 2025|Email|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-06|Salud masculina 2025|Email|21
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-07|Vacaciones con buena visión 2025|SMS|18
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-07|Vacaciones con buena visión 2025|SMS|6
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-08|Control de crónicos al día 2025|WhatsApp|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-08|Control de crónicos al día 2025|WhatsApp|16
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-09|Corazón sano 2025|SMS|5
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-09|Corazón sano 2025|SMS|17
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-09|Corazón sano 2025|WhatsApp|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-09|Corazón sano 2025|WhatsApp|16
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-10|Octubre rosa 2025|Email|22
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-10|Octubre rosa 2025|Email|5
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-10|Octubre rosa 2025|WhatsApp|18
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-10|Octubre rosa 2025|WhatsApp|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-11|Semana de la salud 2025|Email|45
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-11|Semana de la salud 2025|Email|9
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-11|Semana de la salud 2025|SMS|31
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-11|Semana de la salud 2025|SMS|9
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-11|Semana de la salud 2025|WhatsApp|11
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-11|Semana de la salud 2025|WhatsApp|35
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-12|Viaja sano en vacaciones 2025|Email|22
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-12|Viaja sano en vacaciones 2025|Email|4
+Envío sin consentimiento (Ley 1581 de 2012)|Canal no autorizado en el perfil vigente|CMP-2025-12|Viaja sano en vacaciones 2025|WhatsApp|25
+Envío sin consentimiento (Ley 1581 de 2012)|Paciente sin perfil (sin autorización registrada)|CMP-2025-12|Viaja sano en vacaciones 2025|WhatsApp|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-01|Chequeo de inicio de año 2024|Email|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-02|Sonrisa sana en familia 2024|Email|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-02|Sonrisa sana en familia 2024|SMS|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-03|Mes de la mujer 2024|App|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-03|Mes de la mujer 2024|WhatsApp|1
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-04|Jornada de vacunación de las Américas 2024|SMS|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-04|Jornada de vacunación de las Américas 2024|WhatsApp|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-05|Temporada respiratoria 2024|App|5
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-05|Temporada respiratoria 2024|Email|6
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-05|Temporada respiratoria 2024|WhatsApp|6
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-06|Salud masculina 2024|Email|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-07|Vacaciones con buena visión 2024|SMS|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-08|Control de crónicos al día 2024|WhatsApp|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-09|Corazón sano 2024|WhatsApp|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-10|Octubre rosa 2024|App|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-10|Octubre rosa 2024|Email|5
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-10|Octubre rosa 2024|WhatsApp|5
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-11|Semana de la salud 2024|App|6
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-11|Semana de la salud 2024|Email|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-11|Semana de la salud 2024|SMS|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-11|Semana de la salud 2024|WhatsApp|9
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-12|Viaja sano en vacaciones 2024|Email|6
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2024-12|Viaja sano en vacaciones 2024|WhatsApp|5
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-01|Chequeo de inicio de año 2025|Email|6
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-02|Sonrisa sana en familia 2025|Email|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-02|Sonrisa sana en familia 2025|SMS|5
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-03|Mes de la mujer 2025|App|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-03|Mes de la mujer 2025|WhatsApp|1
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-04|Jornada de vacunación de las Américas 2025|SMS|11
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-04|Jornada de vacunación de las Américas 2025|WhatsApp|7
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-05|Temporada respiratoria 2025|Email|1
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-05|Temporada respiratoria 2025|WhatsApp|5
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-06|Salud masculina 2025|Email|1
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-07|Vacaciones con buena visión 2025|App|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-07|Vacaciones con buena visión 2025|SMS|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-08|Control de crónicos al día 2025|WhatsApp|2
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-09|Corazón sano 2025|SMS|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-09|Corazón sano 2025|WhatsApp|1
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-10|Octubre rosa 2025|App|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-10|Octubre rosa 2025|Email|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-10|Octubre rosa 2025|WhatsApp|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-11|Semana de la salud 2025|App|3
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-11|Semana de la salud 2025|Email|9
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-11|Semana de la salud 2025|SMS|9
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-11|Semana de la salud 2025|WhatsApp|11
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-12|Viaja sano en vacaciones 2025|Email|4
+Paciente inexistente en el OLTP|pacienteId sin registro en Pacientes (PacienteKey -1)|CMP-2025-12|Viaja sano en vacaciones 2025|WhatsApp|4
+
+(165 rows affected)
+
+ETL terminado en 15,1 s
