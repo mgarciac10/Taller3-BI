@@ -1,0 +1,635 @@
+[
+  {
+    "_id": "CMP-2024-01",
+    "nombre": "Chequeo de inicio de año 2024",
+    "objetivo": "Captación",
+    "responsable": "Julián Restrepo",
+    "estado": "Finalizada",
+    "canales": [
+      "Email"
+    ],
+    "fechaInicio": {
+      "$date": "2024-01-08T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-02-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico"
+    ],
+    "descuentoOfrecido": 15,
+    "codigoBeneficio": "CIA24",
+    "presupuesto": 7200000
+  },
+  {
+    "_id": "CMP-2024-02",
+    "nombre": "Sonrisa sana en familia 2024",
+    "objetivo": "Fidelización",
+    "responsable": "Paula Henao",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "SMS"
+    ],
+    "fechaInicio": {
+      "$date": "2024-02-03T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-02-29T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Odontología"
+    ],
+    "descuentoOfrecido": 10,
+    "codigoBeneficio": "SSF24",
+    "presupuesto": 6700000
+  },
+  {
+    "_id": "CMP-2024-03",
+    "nombre": "Mes de la mujer 2024",
+    "objetivo": "Prevención",
+    "responsable": "Andrés Gaviria",
+    "estado": "Finalizada",
+    "canales": [
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2024-03-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-04-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Promoción y prevención",
+      "Imágenes diagnósticas"
+    ],
+    "descuentoOfrecido": 20,
+    "codigoBeneficio": "MM24",
+    "presupuesto": 8900000,
+    "segmentoObjetivo": {
+      "sexo": "F",
+      "edadMin": 21,
+      "edadMax": 69
+    }
+  },
+  {
+    "_id": "CMP-2024-04",
+    "nombre": "Jornada de vacunación de las Américas 2024",
+    "objetivo": "Prevención",
+    "responsable": "Marcela Ochoa",
+    "estado": "Finalizada",
+    "canales": [
+      "SMS",
+      "WhatsApp"
+    ],
+    "fechaInicio": {
+      "$date": "2024-04-20T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-05-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Promoción y prevención"
+    ],
+    "descuentoOfrecido": 0,
+    "presupuesto": 8800000
+  },
+  {
+    "_id": "CMP-2024-05",
+    "nombre": "Temporada respiratoria 2024",
+    "objetivo": "Prevención",
+    "responsable": "Julián Restrepo",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2024-05-02T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-06-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Promoción y prevención"
+    ],
+    "descuentoOfrecido": 10,
+    "codigoBeneficio": "TR24",
+    "presupuesto": 11400000
+  },
+  {
+    "_id": "CMP-2024-06",
+    "nombre": "Salud masculina 2024",
+    "objetivo": "Captación",
+    "responsable": "Paula Henao",
+    "estado": "Finalizada",
+    "canales": [
+      "Email"
+    ],
+    "fechaInicio": {
+      "$date": "2024-06-03T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-07-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Laboratorio clínico",
+      "Consulta externa"
+    ],
+    "descuentoOfrecido": 15,
+    "codigoBeneficio": "SM24",
+    "presupuesto": 6000000,
+    "segmentoObjetivo": {
+      "sexo": "M",
+      "edadMin": 40,
+      "edadMax": 75
+    }
+  },
+  {
+    "_id": "CMP-2024-07",
+    "nombre": "Vacaciones con buena visión 2024",
+    "objetivo": "Captación",
+    "responsable": "Andrés Gaviria",
+    "estado": "Finalizada",
+    "canales": [
+      "App",
+      "SMS"
+    ],
+    "fechaInicio": {
+      "$date": "2024-07-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-08-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Cirugía ambulatoria",
+      "Consulta externa"
+    ],
+    "descuentoOfrecido": 12,
+    "codigoBeneficio": "VCBV24",
+    "presupuesto": 9800000,
+    "segmentoObjetivo": {
+      "edadMin": 18,
+      "edadMax": 80
+    }
+  },
+  {
+    "_id": "CMP-2024-08",
+    "nombre": "Control de crónicos al día 2024",
+    "objetivo": "Adherencia",
+    "responsable": "Marcela Ochoa",
+    "estado": "Finalizada",
+    "canales": [
+      "WhatsApp"
+    ],
+    "fechaInicio": {
+      "$date": "2024-08-04T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-09-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico"
+    ],
+    "descuentoOfrecido": 0,
+    "presupuesto": 6500000,
+    "segmentoObjetivo": {
+      "edadMin": 30,
+      "edadMax": 90
+    }
+  },
+  {
+    "_id": "CMP-2024-09",
+    "nombre": "Corazón sano 2024",
+    "objetivo": "Prevención",
+    "responsable": "Julián Restrepo",
+    "estado": "Finalizada",
+    "canales": [
+      "WhatsApp",
+      "SMS"
+    ],
+    "fechaInicio": {
+      "$date": "2024-09-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-10-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico",
+      "Imágenes diagnósticas"
+    ],
+    "descuentoOfrecido": 15,
+    "codigoBeneficio": "CS24",
+    "presupuesto": "9.200.000",
+    "segmentoObjetivo": {
+      "edadMin": 35,
+      "edadMax": 85
+    }
+  },
+  {
+    "_id": "CMP-2024-10",
+    "nombre": "Octubre rosa 2024",
+    "objetivo": "Prevención",
+    "responsable": "Paula Henao",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2024-10-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-11-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Imágenes diagnósticas",
+      "Promoción y prevención"
+    ],
+    "descuentoOfrecido": 25,
+    "codigoBeneficio": "OR24",
+    "presupuesto": 14700000,
+    "segmentoObjetivo": {
+      "sexo": "F",
+      "edadMin": 40,
+      "edadMax": 74
+    }
+  },
+  {
+    "_id": "CMP-2024-11",
+    "nombre": "Semana de la salud 2024",
+    "objetivo": "Captación",
+    "responsable": "Andrés Gaviria",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "SMS",
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2024-11-10T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-11-24T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico",
+      "Imágenes diagnósticas",
+      "Odontología",
+      "Promoción y prevención",
+      "Cirugía ambulatoria"
+    ],
+    "descuentoOfrecido": 25,
+    "codigoBeneficio": "SS24",
+    "presupuesto": 18000000
+  },
+  {
+    "_id": "CMP-2024-12",
+    "nombre": "Viaja sano en vacaciones 2024",
+    "objetivo": "Reactivación",
+    "responsable": "",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "WhatsApp"
+    ],
+    "fechaInicio": {
+      "$date": "2024-12-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2024-12-21T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Promoción y prevención",
+      "Consulta externa"
+    ],
+    "descuentoOfrecido": 10,
+    "codigoBeneficio": "VSV24",
+    "presupuesto": 7100000
+  },
+  {
+    "_id": "CMP-2025-01",
+    "nombre": "Chequeo de inicio de año 2025",
+    "objetivo": "Captación",
+    "responsable": "Paula Henao",
+    "estado": "Finalizada",
+    "canales": [
+      "Email"
+    ],
+    "fechaInicio": {
+      "$date": "2025-01-08T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-02-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico"
+    ],
+    "descuentoOfrecido": 15,
+    "codigoBeneficio": "CIA25",
+    "presupuesto": 9200000
+  },
+  {
+    "_id": "CMP-2025-02",
+    "nombre": "Sonrisa sana en familia 2025",
+    "objetivo": "Fidelización",
+    "responsable": "Andrés Gaviria",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "SMS"
+    ],
+    "fechaInicio": {
+      "$date": "2025-02-03T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-03-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Odontología"
+    ],
+    "descuentoOfrecido": 10,
+    "codigoBeneficio": "SSF25",
+    "presupuesto": 6800000
+  },
+  {
+    "_id": "CMP-2025-03",
+    "nombre": "Mes de la mujer 2025",
+    "objetivo": "Prevención",
+    "responsable": "Marcela Ochoa",
+    "estado": "Finalizada",
+    "canales": [
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2025-03-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-04-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "promocion y prevencion",
+      "Imagenes diagnosticas"
+    ],
+    "descuentoOfrecido": 20,
+    "codigoBeneficio": "MM25",
+    "presupuesto": 9700000,
+    "segmentoObjetivo": {
+      "sexo": "F",
+      "edadMin": 21,
+      "edadMax": 69
+    }
+  },
+  {
+    "_id": "CMP-2025-04",
+    "nombre": "Jornada de vacunación de las Américas 2025",
+    "objetivo": "Prevención",
+    "responsable": "Julián Restrepo",
+    "estado": "Finalizada",
+    "canales": [
+      "SMS",
+      "WhatsApp"
+    ],
+    "fechaInicio": {
+      "$date": "2025-04-20T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-05-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Promoción y prevención"
+    ],
+    "descuentoOfrecido": 0,
+    "presupuesto": 8800000
+  },
+  {
+    "_id": "CMP-2025-05",
+    "nombre": "Temporada respiratoria 2025",
+    "objetivo": "Prevención",
+    "responsable": "Paula Henao",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2025-05-02T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-06-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Promoción y prevención"
+    ],
+    "descuentoOfrecido": 10,
+    "codigoBeneficio": "TR25",
+    "presupuesto": "15.100.000"
+  },
+  {
+    "_id": "CMP-2025-06",
+    "nombre": "Salud masculina 2025",
+    "objetivo": "Captación",
+    "responsable": "Andrés Gaviria",
+    "estado": "Finalizada",
+    "canales": [
+      "Email"
+    ],
+    "fechaInicio": {
+      "$date": "2025-06-03T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-07-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Laboratorio clínico",
+      "Consulta externa"
+    ],
+    "descuentoOfrecido": 15,
+    "codigoBeneficio": "SM25",
+    "presupuesto": 7100000,
+    "segmentoObjetivo": {
+      "sexo": "M",
+      "edadMin": 40,
+      "edadMax": 75
+    }
+  },
+  {
+    "_id": "CMP-2025-07",
+    "nombre": "Vacaciones con buena visión 2025",
+    "objetivo": "Captación",
+    "estado": "Finalizada",
+    "canales": [
+      "App",
+      "SMS"
+    ],
+    "fechaInicio": {
+      "$date": "2025-07-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-08-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Cirugía ambulatoria",
+      "Consulta externa"
+    ],
+    "descuentoOfrecido": 12,
+    "codigoBeneficio": "VCBV25",
+    "presupuesto": 11700000,
+    "segmentoObjetivo": {
+      "edadMin": 18,
+      "edadMax": 80
+    }
+  },
+  {
+    "_id": "CMP-2025-08",
+    "nombre": "Control de crónicos al día 2025",
+    "objetivo": "Adherencia",
+    "responsable": "Julián Restrepo",
+    "estado": "Finalizada",
+    "canales": [
+      "WhatsApp"
+    ],
+    "fechaInicio": {
+      "$date": "2025-08-04T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-09-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico"
+    ],
+    "descuentoOfrecido": 0,
+    "presupuesto": 6200000,
+    "segmentoObjetivo": {
+      "edadMin": 30,
+      "edadMax": 90
+    }
+  },
+  {
+    "_id": "CMP-2025-09",
+    "nombre": "Corazón sano 2025",
+    "objetivo": "Prevención",
+    "responsable": "Paula Henao",
+    "estado": "Finalizada",
+    "canales": [
+      "WhatsApp",
+      "SMS"
+    ],
+    "fechaInicio": {
+      "$date": "2025-09-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-10-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico",
+      "Imágenes diagnósticas"
+    ],
+    "descuentoOfrecido": 15,
+    "codigoBeneficio": "CS25",
+    "presupuesto": 11100000,
+    "segmentoObjetivo": {
+      "edadMin": 35,
+      "edadMax": 85
+    }
+  },
+  {
+    "_id": "CMP-2025-10",
+    "nombre": "Octubre rosa 2025",
+    "objetivo": "Prevención",
+    "responsable": "Andrés Gaviria",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2025-10-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-11-01T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Imágenes diagnósticas",
+      "Promoción y prevención"
+    ],
+    "descuentoOfrecido": 25,
+    "codigoBeneficio": "OR25",
+    "presupuesto": 17400000,
+    "segmentoObjetivo": {
+      "sexo": "F",
+      "edadMin": 40,
+      "edadMax": 74
+    }
+  },
+  {
+    "_id": "CMP-2025-11",
+    "nombre": "Semana de la salud 2025",
+    "objetivo": "Captación",
+    "responsable": "Marcela Ochoa",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "SMS",
+      "WhatsApp",
+      "App"
+    ],
+    "fechaInicio": {
+      "$date": "2025-11-10T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-11-24T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Consulta externa",
+      "Laboratorio clínico",
+      "Imágenes diagnósticas",
+      "Odontología",
+      "Promoción y prevención",
+      "Cirugía ambulatoria"
+    ],
+    "descuentoOfrecido": 25,
+    "codigoBeneficio": "SS25",
+    "presupuesto": "$22.500.000"
+  },
+  {
+    "_id": "CMP-2025-12",
+    "nombre": "Viaja sano en vacaciones 2025",
+    "objetivo": "Reactivación",
+    "responsable": "Julián Restrepo",
+    "estado": "Finalizada",
+    "canales": [
+      "Email",
+      "WhatsApp"
+    ],
+    "fechaInicio": {
+      "$date": "2025-12-01T13:00:00Z"
+    },
+    "fechaFin": {
+      "$date": "2025-12-21T04:59:00Z"
+    },
+    "lineasPromocionadas": [
+      "Promoción y prevención",
+      "Consulta externa"
+    ],
+    "descuentoOfrecido": 10,
+    "codigoBeneficio": "VSV25",
+    "presupuesto": 8600000
+  }
+]

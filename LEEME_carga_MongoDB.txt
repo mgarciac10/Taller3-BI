@@ -1,0 +1,111 @@
+══════════════════════════════════════════════════════════════════
+ TRABAJO FINAL BI CLÍNICA · DATOS DE EXPERIENCIA DEL PACIENTE (MongoDB)
+ Base de datos: clinica_bi
+══════════════════════════════════════════════════════════════════
+
+ARCHIVOS
+  campanas.json                 24 campañas de salud (2024-2025). Formato: arreglo JSON.
+  perfiles_pacientes.json       ~5.200 perfiles de contacto y programas de los pacientes. Un documento por línea.
+  interacciones_campanas.json   ~36.300 interacciones paciente-campaña. Un documento por línea.
+
+  Las fechas vienen en formato MongoDB Extended JSON: {"$date": "2025-11-22T00:28:13Z"}
+  mongoimport las convierte automáticamente al tipo Date. Todas están en UTC.
+  Todos los datos son ficticios.
+
+LLAVE DE INTEGRACIÓN CON SQL SERVER
+  pacienteId (MongoDB)  =  Pacientes.PacienteID (CLINICABI_OLTP)
+  Los PacienteID del OLTP van de 1 a 6.000 (scripts 01 y 02).
+  Los valores de "lineasInteres" y "lineasPromocionadas" corresponden a LineasServicio.Nombre del OLTP.
+
+──────────────────────────────────────────────────────────────────
+ OPCIÓN A · Línea de comandos (MongoDB Database Tools)
+──────────────────────────────────────────────────────────────────
+  Requisitos: MongoDB Community Server y MongoDB Database Tools instalados.
+  Abrir una terminal en la carpeta donde están los archivos y ejecutar:
+
+  mongoimport --db clinica_bi --collection campanas --file campanas.json --jsonArray --drop
+  mongoimport --db clinica_bi --collection perfiles_pacientes --file perfiles_pacientes.json --drop
+  mongoimport --db clinica_bi --collection interacciones_campanas --file interacciones_campanas.json --drop
+
+  Si usan MongoDB Atlas, agregar:  --uri "mongodb+srv://USUARIO:CLAVE@CLUSTER.mongodb.net"
+
+──────────────────────────────────────────────────────────────────
+ OPCIÓN B · MongoDB Compass (interfaz gráfica)
+──────────────────────────────────────────────────────────────────
+  1. Conectarse a mongodb://localhost:27017
+  2. Crear la base de datos clinica_bi con la colección campanas
+  3. Colección → ADD DATA → Import JSON or CSV file → seleccionar el archivo → Import
+  4. Repetir para perfiles_pacientes e interacciones_campanas
+
+──────────────────────────────────────────────────────────────────
+ VALIDACIÓN (en mongosh o en la pestaña _MONGOSH de Compass)
+──────────────────────────────────────────────────────────────────
+  use clinica_bi
+  db.campanas.countDocuments()                  // 24
+  db.perfiles_pacientes.countDocuments()        // 5.215
+  db.interacciones_campanas.countDocuments()    // 36.313
+
+  // Interacciones por canal (¿cuántas formas distintas de escribir el canal aparecen?)
+  db.interacciones_campanas.aggregate([
+    { $group: { _id: "$canal", total: { $sum: 1 } } },
+    { $sort:  { total: -1 } }
+  ])
+
+  // Eventos por tipo (desanidar el arreglo eventos)
+  db.interacciones_campanas.aggregate([
+    { $unwind: "$eventos" },
+    { $group: { _id: "$eventos.tipo", total: { $sum: 1 } } },
+    { $sort:  { total: -1 } }
+  ])
+
+  // Pacientes con más de un perfil
+  db.perfiles_pacientes.aggregate([
+    { $group: { _id: { $toInt: "$pacienteId" }, n: { $sum: 1 } } },
+    { $match: { n: { $gt: 1 } } },
+    { $count: "pacientesDuplicados" }
+  ])
+
+  // Programas de riesgo
+  db.perfiles_pacientes.aggregate([
+    { $group: { _id: "$programaRiesgo.programa", total: { $sum: 1 } } },
+    { $sort:  { total: -1 } }
+  ])
+
+──────────────────────────────────────────────────────────────────
+ DESCRIPCIÓN DE LAS COLECCIONES
+──────────────────────────────────────────────────────────────────
+ campanas
+   _id                     Código de la campaña (CMP-AAAA-MM)
+   nombre, objetivo, responsable, estado
+   canales                 Arreglo: Email, SMS, WhatsApp, App
+   fechaInicio, fechaFin   Date
+   lineasPromocionadas     Arreglo de líneas de servicio
+   segmentoObjetivo        { sexo, edadMin, edadMax }  (solo en campañas dirigidas)
+   descuentoOfrecido       % de descuento sobre la tarifa particular
+   codigoBeneficio         Texto (no existe en campañas sin descuento)
+   presupuesto             Pesos colombianos (COP)
+
+ perfiles_pacientes
+   pacienteId              Llave hacia Pacientes.PacienteID
+   fechaActualizacion      Date
+   origenRegistro          sede / portal_web / app / call_center / eps
+   consentimientos         { email, sms, whatsapp }  (autorización de contacto; Ley 1581 de 2012)
+   canalPreferido          email / sms / whatsapp / app / ninguno
+   lineasInteres           Arreglo de líneas de servicio
+   programaRiesgo          { programa, nivelRiesgo, fechaIngreso, adherencia }  (no todos lo tienen)
+                           programa: Riesgo cardiovascular, Diabetes, Salud mental,
+                                     Respiratorio crónico, Materno perinatal
+                           nivelRiesgo: Alto / Medio / Bajo · adherencia: % de 0 a 100
+   encuestasSatisfaccion   Arreglo de { fecha, puntaje 0-10, comentario, servicioEvaluado }  (puede no existir)
+
+ interacciones_campanas
+   pacienteId, campanaId   Llaves hacia el paciente y la campaña
+   canal                   email / sms / whatsapp / app
+   dispositivo             móvil / escritorio / tablet
+   eventos                 Arreglo de { tipo, fecha }
+                           tipos: enviado, entregado, rebotado, abierto, leido,
+                                  impresion, clic, baja_suscripcion
+   citaAgendada            true/false (solo cuando hubo clic)
+
+ ATENCIÓN: los datos vienen como de un sistema real. Hay inconsistencias
+ que deben detectar y resolver en el ETL. Documenten cada una.
