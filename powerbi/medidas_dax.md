@@ -46,7 +46,7 @@ Borra cualquier otra relación que Power BI cree por su cuenta.
 - Crea una tabla vacía `_Medidas` (*Especificar datos* → Cargar) y pon ahí todas las medidas.
 - Formato: medidas de dinero en **Moneda $ Español (Colombia)** con 0 decimales; tasas en **Porcentaje** con 1 decimal.
 
-## 3. Medidas DAX (32)
+## 3. Medidas DAX (33)
 
 Cada medida va sola en *Nueva medida* (copiar sin los comentarios `--`). Cubren la rúbrica: **CALCULATE** (Año Anterior, Presupuesto, Facturación Atribuida, % Promotores), **DIVIDE** (todas las tasas y %), **inteligencia de tiempo** (SAMEPERIODLASTYEAR y DATEADD) y medidas que reutilizan otras (ROI, NPS, crecimientos).
 
